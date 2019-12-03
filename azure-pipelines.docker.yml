@@ -1,0 +1,38 @@
+
+pool:
+  vmImage: 'ubuntu-16.04' # examples of other options: 'macOS-10.13', 'vs2017-win2016'
+
+
+variables:
+  dockerId: aipiggybot  
+  imageName: p2p-pod  # Replace with the name of the image you want to publish
+
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.7'
+
+
+- script: |
+    python -m pip install --upgrade pip setuptools wheel
+    pip install -r requirements.txt
+  displayName: 'Install tools'
+
+- script: |
+    pycodestyle  --show-source --show-pep8 dealer/util/*.py tests/*.py 
+  displayName: 'PEP8 Code Style Check'
+
+- script: |
+    pip install pytest
+    pip install pytest-cov
+    pytest --cov-report=xml --cov=dealer -p no:warnings tests/
+  displayName: 'Test with pytest'
+
+- script: |
+    pip install codecov
+    codecov --token="${CODECOV_TOKEN}"
+  env:
+    CODECOV_TOKEN: $(CODECOV_TOKEN)
+  displayName: 'CodeCov'
+  
